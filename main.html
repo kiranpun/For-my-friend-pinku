@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Valentine Maze Game</title>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Caveat:wght@600&family=Patrick+Hand&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background: url("pink.jpg") no-repeat center center fixed;
+        background-size: cover;
+        text-align: center;
+        font-family: "Arial", sans-serif;
+        margin: 0;
+        padding: 10px;
+      }
+
+      h1 {
+        font-family: "Press Start 2P", cursive;
+        color: white;
+        text-shadow: 3px 3px 0 #ff6699, -3px -3px 0 #ff6699, -3px 3px 0 #ff6699,
+          3px -3px 0 #ff6699;
+        margin-top: 20px;
+      }
+
+      p {
+        font-family: "Patrick Hand", cursive;
+        font-size: 33px;
+        color: #f71c74;
+        display: inline-block;
+      }
+
+      #maze {
+        display: grid;
+        grid-template-columns: repeat(10, 40px);
+        gap: 5px;
+        justify-content: center;
+
+        margin: 20px auto;
+
+        padding: 15px;
+        width: fit-content;
+      }
+
+      .cell {
+        width: 40px;
+        height: 40px;
+        background-color: #fcc0d4;
+        border-radius: 8px;
+      }
+
+      .wall {
+        background-color: #ff4f95;
+      }
+
+      .player {
+        background-image: url("baekhyun.png");
+        background-size: cover;
+        width: 40px;
+        height: 40px;
+        border: 1px solid #ff3385;
+        border-radius: 10px;
+      }
+
+      .goal {
+        background-image: url("heart.png");
+        background-size: cover;
+        border: 1px solid #ff3385;
+        border-radius: 10px;
+      }
+
+      .broken-heart {
+        background-image: url("broken_heart.png");
+        background-size: cover;
+        border: 1px solid #ff3385;
+        border-radius: 10px;
+      }
+
+      #play-music {
+        position: absolute;
+        top: -1000px;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Will you be my Valentine? <3</h1>
+    <p>Move Baekhyun to the correct heart using arrow keys!</p>
+
+    <!-- Hidden button to start music on first click -->
+    <button id="play-music">Play Music</button>
+
+    <!-- Auto-playing music -->
+    <audio id="bg-music" loop>
+      <source src="music.mp3" type="audio/mpeg" />
+    </audio>
+
+    <div id="maze"></div>
+
+    <script>
+      const mazeLayout = [
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+        [1, 0, 1, 0, 1, 0, 1, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+        [1, 0, 1, 1, 1, 0, 1, 1, 0, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+        [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+        [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+      ];
+
+      const maze = document.getElementById("maze");
+      let playerPos = { x: 5, y: 4 };
+      let goalPos = { x: 8, y: 7 };
+      let brokenHeartPos = { x: 1, y: 1 };
+
+      function drawMaze() {
+        maze.innerHTML = "";
+        for (let y = 0; y < mazeLayout.length; y++) {
+          for (let x = 0; x < mazeLayout[y].length; x++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            if (mazeLayout[y][x] === 1) {
+              cell.classList.add("wall");
+            } else if (x === playerPos.x && y === playerPos.y) {
+              cell.classList.add("player");
+            } else if (x === goalPos.x && y === goalPos.y) {
+              cell.classList.add("goal");
+            } else if (x === brokenHeartPos.x && y === brokenHeartPos.y) {
+              cell.classList.add("broken-heart");
+            }
+            maze.appendChild(cell);
+          }
+        }
+      }
+
+      function movePlayer(dx, dy) {
+        let newX = playerPos.x + dx;
+        let newY = playerPos.y + dy;
+        if (mazeLayout[newY][newX] !== 1) {
+          playerPos.x = newX;
+          playerPos.y = newY;
+          drawMaze();
+          if (newX === goalPos.x && newY === goalPos.y) {
+            setTimeout(
+              () => (window.location.href = "valentine_success.html"),
+              100
+            );
+          }
+          if (newX === brokenHeartPos.x && newY === brokenHeartPos.y) {
+            setTimeout(
+              () => (window.location.href = "valentine_fail.html"),
+              100
+            );
+          }
+        }
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "ArrowUp") movePlayer(0, -1);
+        if (e.key === "ArrowDown") movePlayer(0, 1);
+        if (e.key === "ArrowLeft") movePlayer(-1, 0);
+        if (e.key === "ArrowRight") movePlayer(1, 0);
+      });
+
+      // Ensure the music plays even if the browser blocks autoplay
+      function startMusic() {
+        const bgMusic = document.getElementById("bg-music");
+        bgMusic.volume = 0.5;
+        bgMusic.play().catch(() => {
+          console.log("Autoplay blocked, user must interact.");
+        });
+      }
+
+      // Start music on any user interaction
+      document.body.addEventListener("click", startMusic);
+      document.body.addEventListener("keydown", startMusic);
+
+      drawMaze();
+    </script>
+  </body>
+</html>
